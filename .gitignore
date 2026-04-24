@@ -1,0 +1,21 @@
+# Secrets
+.env
+
+# Environments
+.venv/
+env/
+venv/
+ENV/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# OS Files
+.DS_Store
+
+# Temporary / Scratch
+scratch/
+default.profraw
+jarvis.py.bak
