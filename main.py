@@ -51,6 +51,8 @@ def main():
 "3. Keep your responses CONCISE and professional.\n"
 "4. Do NOT provide any conversational text when calling a tool.\n"
 "5. Never say 'I am searching' or 'Please wait'."
+"6. Give answer in organised way - using bullet points if needed"
+"7.Think step by step before answering. Show your reasoning in <think> tags, then provide the final answer."
             ),
         }
     ]

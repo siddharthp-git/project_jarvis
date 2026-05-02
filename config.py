@@ -1,28 +1,94 @@
 """
 Global configuration for Project Jarvis.
-Loads environment variables from .env for sensitive credentials.
+Loads environment variables from .env (and .env.local / keys.env overrides).
 """
 import os
-from dotenv import load_dotenv
+from dataclasses import dataclass
+from functools import lru_cache
+from pathlib import Path
 
-# Load variables from .env file
-load_dotenv()
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+    for candidate in (Path(".env.local"), Path("keys.env")):
+        if candidate.exists():
+            load_dotenv(dotenv_path=candidate, override=True)
+except Exception:
+    pass
 
-OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434/api/chat")
-MODEL = os.environ.get("MODEL", "gemma4:e2b")
-MAX_TOOL_ROUNDS = int(os.environ.get("MAX_TOOL_ROUNDS", 5))
-CONVERSATION_HISTORY_LIMIT = int(os.environ.get("CONVERSATION_HISTORY_LIMIT", 30))
-TIMEOUT = int(os.environ.get("TIMEOUT", 180))
-WAKE_WORD = os.environ.get("WAKE_WORD", "hello")
 
-# Tavily — get a free key at https://app.tavily.com
-TAVILY_API_KEY = os.environ.get("TAVILY_API_KEY", "YOUR_TAVILY_KEY")
+def _get(key: str, default: str = "") -> str:
+    return os.environ.get(key, default)
 
-# NewsAPI — get a free key at https://newsapi.org
-NEWS_API_KEY = os.environ.get("NEWS_API_KEY", "YOUR_NEWS_API_KEY")
 
-# ─── Gmail SMTP (for send_email tool) ────────────────────────────
-# Use your Gmail address and a Google App Password (NOT your regular password).
-# Create one at: https://myaccount.google.com/apppasswords
-GMAIL_ADDRESS  = os.environ.get("GMAIL_ADDRESS",  "YOUR_GMAIL@gmail.com")
-GMAIL_APP_PASS = os.environ.get("GMAIL_APP_PASS", "YOUR_APP_PASSWORD_HERE")
+@dataclass(frozen=True)
+class Settings:
+    # ─── Ollama / LLM ──────────────────────────────────────────────
+    ollama_url: str
+    model: str
+    max_tool_rounds: int
+    conversation_history_limit: int
+    timeout: int
+    wake_word: str
+
+    # ─── Web Search ────────────────────────────────────────────────
+    tavily_api_key: str
+
+    # ─── News ──────────────────────────────────────────────────────
+    news_api_key: str
+
+    # ─── Gmail SMTP ────────────────────────────────────────────────
+    gmail_address: str
+    gmail_app_pass: str
+
+    # ─── Amadeus Flights ───────────────────────────────────────────
+    amadeus_api_key: str
+    amadeus_api_secret: str
+    amadeus_env: str
+
+    # ─── AviationStack Flights ─────────────────────────────────────
+    aviationstack_api_key: str
+
+
+@lru_cache(maxsize=1)
+def get_settings() -> Settings:
+    return Settings(
+        ollama_url=_get("OLLAMA_URL", "http://localhost:11434/api/chat"),
+        model=_get("MODEL", "gemma4:e2b"),
+        max_tool_rounds=int(_get("MAX_TOOL_ROUNDS", "5")),
+        conversation_history_limit=int(_get("CONVERSATION_HISTORY_LIMIT", "30")),
+        timeout=int(_get("TIMEOUT", "180")),
+        wake_word=_get("WAKE_WORD", "hello"),
+
+        tavily_api_key=_get("TAVILY_API_KEY", ""),
+        news_api_key=_get("NEWS_API_KEY", ""),
+
+        gmail_address=_get("GMAIL_ADDRESS", ""),
+        gmail_app_pass=_get("GMAIL_APP_PASS", ""),
+
+        amadeus_api_key=_get("AMADEUS_API_KEY", ""),
+        amadeus_api_secret=_get("AMADEUS_API_SECRET", ""),
+        amadeus_env=_get("AMADEUS_ENV", "test"),
+
+        aviationstack_api_key=_get("AVIATIONSTACK_API_KEY", ""),
+    )
+
+
+# ─── Backwards-compatible module-level constants ────────────────────
+# Other tools (weather, news, etc.) still do `import config; config.TAVILY_API_KEY`
+# so we expose the same names they already use.
+_s = get_settings()
+OLLAMA_URL               = _s.ollama_url
+MODEL                    = _s.model
+MAX_TOOL_ROUNDS          = _s.max_tool_rounds
+CONVERSATION_HISTORY_LIMIT = _s.conversation_history_limit
+TIMEOUT                  = _s.timeout
+WAKE_WORD                = _s.wake_word
+TAVILY_API_KEY           = _s.tavily_api_key
+NEWS_API_KEY             = _s.news_api_key
+GMAIL_ADDRESS            = _s.gmail_address
+GMAIL_APP_PASS           = _s.gmail_app_pass
+AMADEUS_API_KEY          = _s.amadeus_api_key
+AMADEUS_API_SECRET       = _s.amadeus_api_secret
+AMADEUS_ENV              = _s.amadeus_env
+AVIATIONSTACK_API_KEY   = _s.aviationstack_api_key

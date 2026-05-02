@@ -6,6 +6,7 @@ from tools.time_tools import get_current_time
 from tools.currency_tools import convert_currency
 from tools.macos_tools import open_application
 from tools.email_tools import send_email_macos as send_email
+from tools.flight_details import get_flight_details
 
 # ─── Tool Definitions (JSON Schema for Ollama) ───────────────────
 
@@ -183,6 +184,37 @@ TOOLS = [
     {
         "type": "function",
         "function": {
+            "name": "flight_details",
+            "description": (
+                "Search for the avaliable flights between two airports"
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "dep_iata": {
+                        "type": "string",
+                        "description": "Departure airport IATA code, e.g. 'DEL'."
+                    },
+                    "arr_iata": {
+                        "type": "string",
+                        "description": "Arrival airport IATA code, e.g. 'BOM'."
+                    },
+                    "flight_iata": {
+                        "type": "string",
+                        "description": "Flight number, e.g. 'AI101'."
+                    },
+                    "flight_status": {
+                        "type": "string",
+                        "description": "Flight status, e.g. 'scheduled', 'active', 'landed', 'cancelled'."
+                    },
+                },
+                "required": ["dep_iata","arr_iata"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "send_email",
             "description": (
                 "SEND EMAIL AUTOMATICALLY. Uses direct Gmail SMTP to send an email immediately. "
@@ -222,4 +254,5 @@ TOOL_REGISTRY = {
     "convert_currency": convert_currency,
     "open_application": open_application,
     "send_email": send_email,
+    "flight_details": get_flight_details,
 }
